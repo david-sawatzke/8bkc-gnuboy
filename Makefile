@@ -6,7 +6,7 @@
 EXTRA_COMPONENT_DIRS := $(POCKETSPRITE_PATH)/8bkc-components/
 IDF_PATH := $(POCKETSPRITE_PATH)/esp-idf
 
-PROJECT_NAME := gnuboy
+PROJECT_NAME := pokip8
 
 include $(IDF_PATH)/make/project.mk
 

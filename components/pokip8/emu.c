@@ -77,7 +77,8 @@ int emu_run()
 	lcd_begin();
 	while (1)
 	{
-		cpu_emulate(2280);
+		// TODO Do until Timer is decreased
+		cpu_step();
 		while (R_LY > 0 && R_LY < 144)
 			emu_step();
 		
@@ -99,15 +100,6 @@ int emu_run()
 		} else {
 			if (r!=EMU_RUN_CONT) return r;
 		}
-		//doevents();
-		vid_begin();
-		if (framecount) { if (!--framecount) die("finished\n"); }
-		
-		if (!(R_LCDC & 0x80))
-			cpu_emulate(32832);
-		
-		while (R_LY > 0) /* wait for next frame */
-			emu_step();
 	}
 	return 0;
 }

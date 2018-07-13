@@ -43,7 +43,7 @@ static void debug_screen() {
 	UG_SetForecolor(C_WHITE);
 	UG_PutString(0, 0, "INFO");
 	UG_SetForecolor(C_YELLOW);
-	UG_PutString(0, 16, "GnuBoy");
+	UG_PutString(0, 16, "pokip8");
 	UG_PutString(0, 24, "Gitrev");
 	UG_SetForecolor(C_WHITE);
 	UG_PutString(0, 32, GITREV);
@@ -68,9 +68,9 @@ static int fccallback(int button, char **glob, char **desc, void *usrptr) {
 	return 0;
 }
 
-#define STATE_TMP_FILE "__gnuboy_statefile.tmp"
+#define STATE_TMP_FILE "__pokip8_statefile.tmp"
 
-void gnuboyTask(void *pvParameters) {
+void pokipTask(void *pvParameters) {
 	char rom[128]="";
 	nvs_handle nvsh=kchal_get_app_nvsh();;
 	//Let other threads start
@@ -132,7 +132,7 @@ void gnuboyTask(void *pvParameters) {
 
 		if (ret==EMU_RUN_NEWROM) {
 			kcugui_init();
-			appfs_handle_t f=kcugui_filechooser("*.gb,*.gbc", "SELECT ROM", fccallback, NULL, 0);
+			appfs_handle_t f=kcugui_filechooser("*.ch8", "SELECT ROM", fccallback, NULL, 0);
 			const char *rrom;
 			appfsEntryInfo(f, &rrom, NULL);
 			strncpy(rom, rrom, sizeof(rom));
@@ -150,10 +150,6 @@ void gnuboyTask(void *pvParameters) {
 	kchal_power_down();
 }
 
-void lineTask();
-
-int frames; //used in lcd
-
 void monTask() {
 	while(1) {
 		vTaskDelay(1000/portTICK_PERIOD_MS);
@@ -166,8 +162,6 @@ void monTask() {
 }
 
 
-#include "cpuregs.h"
-
 void startEmuHook() {
 	const esp_partition_t* part;
 	if (kchal_get_keys()&KC_BTN_START) return;
@@ -177,14 +171,8 @@ void startEmuHook() {
 	} else {
 		printf("Couldn't find state part!\n");
 	}
-	vram_dirty();
-	pal_dirty();
-	sound_dirty();
-	mem_updatemap();
 	printf("Save state boot rom loaded: %d\n", bootromLoaded);
 }
-
-#define BOOTROM_NAME "gbcrom.bin"
 
 void app_main()
 {
@@ -195,20 +183,7 @@ void app_main()
 	kchal_init();
 	nvs_flash_init();
 	
-	hw.gbbootromdata=NULL;
-	if (appfsExists(BOOTROM_NAME)) {
-		appfs_handle_t fd=appfsOpen(BOOTROM_NAME);
-		err=appfsMmap(fd, 0, 2304, (const void**)&hw.gbbootromdata, SPI_FLASH_MMAP_DATA, &hbootrom);
-		if (err==ESP_OK) {
-			printf("Initialized. bootROM@%p\n", hw.gbbootromdata);
-		} else {
-			printf("Couldn't map bootrom appfs file!\n");
-		}
-	} else {
-		printf("No bootrom found!\n");
-	}
-	xTaskCreatePinnedToCore(&lineTask, "lineTask", 1024, NULL, 6, NULL, 1);
-	xTaskCreatePinnedToCore(&gnuboyTask, "gnuboyTask", 1024*6, NULL, 5, NULL, 0);
+	xTaskCreatePinnedToCore(&gnuboyTask, "pokipTask", 1024*6, NULL, 5, NULL, 0);
 	xTaskCreatePinnedToCore(&monTask, "monTask", 1024*2, NULL, 7, NULL, 0);
 }
 
